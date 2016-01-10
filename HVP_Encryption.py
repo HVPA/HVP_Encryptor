@@ -23,18 +23,18 @@ DecodeAES = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(PADDING)
 
 
 def readfile(filename):
-    f = open(filename, 'r')
+    f = open(filename, 'rb')
     result = f.read()
     f.close()
-    return result
-
+    return result   
+    
 def make_key():
     rng = Random.new().read
     RSAkey = RSA.generate(1024, rng)
     return RSAkey
     
 def save_key(key, filename):
-    f = open(filename, 'w')
+    f = open(filename, 'wb')
     f.write(key.exportKey())
     f.flush()
     f.close()
@@ -52,8 +52,10 @@ def make_encryption(msg, key_src, pub_dest):
     rng = Random.new().read
     signature = key_src.sign(hash, rng)
     
-    # 2a. Make a temp session key
-    session_key = os.urandom(BLOCK_SIZE)
+    # 2a. Make a temp session key by randomly creating a 32 char long string
+    import random, string
+    var = ''.join(random.choice(string.ascii_uppercase) for x in range(BLOCK_SIZE))
+    session_key = var.zfill(BLOCK_SIZE) # fills it up to 32 bytes
     cipher = AES.new(session_key)
     
     # 2b. Encrypt using session key
@@ -98,17 +100,17 @@ def Encrypt(public_file, private_file, input_file, output_file):
     signature, encoded_msg, encoded_key = make_encryption(msg, pri_key, pub_key)
     
     print "Writing %s" % output_file
-    f_msg = open(output_file, 'w')
+    f_msg = open(output_file, 'wb')
     f_msg.write(encoded_msg)
     f_msg.close()
     
     print "Writing %s.session" % output_file
-    f_session = open(output_file + '.session', 'w')
+    f_session = open(output_file + '.session', 'wb')
     f_session.write(encoded_key[0]) # Returned as a () array of one element string
     f_session.close()
     
     print "Writing %s.sig" % output_file
-    f_sig = open(output_file + '.sig', 'w')
+    f_sig = open(output_file + '.sig', 'wb')
     f_sig.write(str(signature[0])) # Returned as a () array of one element long
     f_sig.close()
     
